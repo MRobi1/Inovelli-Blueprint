@@ -1,4 +1,109 @@
-  source_url: https://raw.githubusercontent.com/JDIacobbo/Home-Assistant/main/CONFIG/blueprints/automation/Inovelli_Set_LED_Color.yaml
+blueprint:
+  name: Inovelli LED Color Change
+  description: Create automations for Inovelli dimmers and switches to set their LED
+    color. Specific to Z-Wave devices using Z-Wave JS and Zigbee devices using ZHA/Z2M.
+  domain: script
+  input:
+    inovelli_dimmer:
+      name: Inovelli Dimmer
+      description: List of available Inovelli dimmers.
+      default: {}
+      selector:
+        target:
+          device:
+          - integration: zwave_js
+            manufacturer: Inovelli
+            model: LZW31-SN
+          - integration: zwave_js
+            manufacturer: Inovelli
+            model: LZW31
+    inovelli_switch:
+      name: Inovelli On/Off Switch
+      description: List of available Inovelli On/Off switches.
+      default: {}
+      selector:
+        target:
+          device:
+          - integration: zwave_js
+            manufacturer: Inovelli
+            model: LZW30-SN
+          - integration: zwave_js
+            manufacturer: Inovelli
+            model: LZW30
+    inovelli_fan_light_combo:
+      name: Inovelli Fan/Light Combo
+      description: List of available Inovelli fan/fight combo switches.
+      default: {}
+      selector:
+        target:
+          device:
+          - integration: zwave_js
+            manufacturer: Inovelli
+            model: LZW36
+    inovelli_red_2_in_1:
+      name: Inovelli Red 2-in-1 Switch
+      description: List of available Inovelli Red 2-in-1 switches.
+      default: {}
+      selector:
+        target:
+          device:
+          - integration: zwave_js
+            manufacturer: Inovelli
+            model: VZW31-SN
+    inovelli_blue_2_in_1_zha:
+      name: Inovelli Blue 2-in-1 Switch (ZHA)
+      description: List of available Inovelli Blue 2-in-1 switches(ZHA).
+      default: []
+      selector:
+        target:
+          device:
+          - integration: zha
+            manufacturer: Inovelli
+            model: VZM31-SN
+    inovelli_blue_2_in_1_z2m:
+      name: Inovelli Blue 2-in-1 Switch (Z2M)
+      description: List of available Inovelli Blue 2-in-1 switches (Z2M).
+      default: []
+      selector:
+        target:
+          device:
+          - integration: mqtt
+            manufacturer: Inovelli
+            model: "Inovelli 2-in-1 switch + dimmer (VZM31-SN)"
+    color:
+      name: LED Color
+      description: 'Select the LED Color - Off: 0 | Red: 1 | Orange: 21 | Yellow:
+        42 | Green: 85 | Cyan: 127 | Teal: 145 | Blue: 170 | Purple: 195 | Light Pink:
+        220 | Pink: 234 | White: 255'
+      selector:
+        number:
+          min: 0.0
+          max: 255.0
+          step: 1.0
+          mode: slider
+    brightness_on:
+      name: LED Brightness When On
+      description: 'Select the LED Brightness when On: 10%: 1 | 20%: 2 | 30%:
+        3 | 40%: 4 | 50%: 5 | 60%: 6 | 70%: 7 | 80%: 8 | 90%:
+        9 | 100%: 10'
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          step: 1.0
+          mode: slider
+    brightness_off:
+      name: LED Brightness When Off
+      description: 'Select the LED Brightness when Off: 10%: 1 | 20%: 2 | 30%:
+        3 | 40%: 4 | 50%: 5 | 60%: 6 | 70%: 7 | 80%: 8 | 90%:
+        9 | 100%: 10'
+      selector:
+        number:
+          min: 0.0
+          max: 10.0
+          step: 1.0
+          mode: slider
+  source_url: https://raw.githubusercontent.com/MRobi1/Inovelli-Blueprint/main/inovelli_led.yaml
 variables:
   color: !input color
   brightness_off: !input brightness_off
@@ -9,190 +114,190 @@ variables:
   inovelli_red_2_in_1: !input inovelli_red_2_in_1
   inovelli_blue_2_in_1_zha: !input inovelli_blue_2_in_1_zha
   inovelli_blue_2_in_1_z2m: !input inovelli_blue_2_in_1_z2m
-trigger: []
-action:
-- choose:
-  - conditions:
-    - condition: template
-      value_template: 'True'
-    sequence:
-      repeat:
-        for_each:
-        - inovelli_dimmer
-        - inovelli_switch
-        - inovelli_fan_light_combo
-        - inovelli_red_2_in_1
-        - inovelli_blue_2_in_1_zha
-        - inovelli_blue_2_in_1_z2m
-        sequence:
-          choose:
-          - conditions: '{{ inovelli_dimmer|length > 0 and repeat.item == ''inovelli_dimmer''}}'
-            sequence:
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '13'
-                value: '{{ color }}'
-              target: !input inovelli_dimmer
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '14'
-                value: '{{ brightness_on }}'
-              target: !input inovelli_dimmer
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '15'
-                value: '{{ brightness_off }}'
-              target: !input inovelli_dimmer
-          - conditions: '{{ inovelli_switch|length > 0 and repeat.item == ''inovelli_switch''}}'
-            sequence:
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '5'
-                value: '{{ color }}'
-              target: !input inovelli_switch
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '6'
-                value: '{{ brightness_on }}'
-              target: !input inovelli_switch
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '7'
-                value: '{{ brightness_off }}'
-              target: !input inovelli_switch
-          - conditions: '{{ inovelli_fan_light_combo|length > 0 and repeat.item ==''inovelli_fan_light_combo'' }}'
-            sequence:
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '18'
-                value: '{{ color }}'
-              target: !input inovelli_fan_light_combo
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '20'
-                value: '{{ color }}'
-              target: !input inovelli_fan_light_combo
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '19'
-                value: '{{ brightness_on }}'
-              target: !input inovelli_fan_light_combo
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '21'
-                value: '{{ brightness_on }}'
-              target: !input inovelli_fan_light_combo
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '22'
-                value: '{{ brightness_off }}'
-              target: !input inovelli_fan_light_combo
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '23'
-                value: '{{ brightness_off }}'
-              target: !input inovelli_fan_light_combo
-          - conditions: '{{ inovelli_red_2_in_1|length > 0  and repeat.item == ''inovelli_red_2_in_1''}}'
-            sequence:
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '95'
-                value: '{{ color }}'
-              target: !input inovelli_red_2_in_1
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '96'
-                value: '{{ color }}'
-              target: !input inovelli_red_2_in_1
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '97'
-                value: '{{ brightness_on }}'
-              target: !input inovelli_red_2_in_1
-            - service: zwave_js.multicast_set_value
-              data:
-                command_class: '112'
-                property: '98'
-                value: '{{ brightness_off }}'
-              target: !input inovelli_red_2_in_1
-          - conditions: '{{ inovelli_blue_2_in_1_zha|length > 0  and repeat.item == ''inovelli_blue_2_in_1_zha''}}'
-            sequence:
-            - repeat:
-                for_each: '{{ inovelli_blue_2_in_1_zha.device_id }}'
-                sequence:
-                - service: zha.set_zigbee_cluster_attribute
-                  data:
-                    cluster_type: in
-                    endpoint_id: 1
-                    cluster_id: 64561
-                    attribute: 96
-                    manufacturer: '4655'
-                    ieee: '{{ (device_attr(repeat.item, "identifiers")|list).0.1 }}'
-                    value: '{{ color }}'
-                - service: zha.set_zigbee_cluster_attribute
-                  data:
-                    cluster_type: in
-                    endpoint_id: 1
-                    cluster_id: 64561
-                    attribute: 95
-                    manufacturer: '4655'
-                    ieee: '{{ (device_attr(repeat.item, "identifiers")|list).0.1 }}'
-                    value: '{{ color }}'
-                - service: zha.set_zigbee_cluster_attribute
-                  data:
-                    cluster_type: in
-                    endpoint_id: 1
-                    cluster_id: 64561
-                    attribute: 97
-                    manufacturer: '4655'
-                    ieee: '{{ (device_attr(repeat.item, "identifiers")|list).0.1 }}'
-                    value: '{{ brightness_on|float * 10 }}'
-                - service: zha.set_zigbee_cluster_attribute
-                  data:
-                    cluster_type: in
-                    endpoint_id: 1
-                    cluster_id: 64561
-                    attribute: 98
-                    manufacturer: '4655'
-                    ieee: '{{ (device_attr(repeat.item, "identifiers")|list).0.1 }}'
-                    value: '{{ brightness_off|float * 10 }}'
-          - conditions: '{{ inovelli_blue_2_in_1_z2m|length > 0  and repeat.item == ''inovelli_blue_2_in_1_z2m''}}'
-            sequence:
-            - repeat:
-                for_each: '{{ inovelli_blue_2_in_1_z2m.device_id }}'
-                sequence:
-                - service: mqtt.publish
-                  data:
-                    topic: zigbee2mqtt/{{repeat.item}}/set
-                    qos: "0"
-                    payload: '{"ledColorWhenOn": {{ color }}}'
-                - service: mqtt.publish
-                  data:
-                    topic: zigbee2mqtt/{{repeat.item}}/set
-                    qos: "0"
-                    payload: '{"ledColorWhenOff": {{ color }}}'
-                - service: mqtt.publish
-                  data:
-                    topic: zigbee2mqtt/{{repeat.item}}/set
-                    qos: "0"
-                    payload: '{"ledIntensityWhenOn": {{ brightness_on|float * 10 }}}'
-                - service: mqtt.publish
-                  data:
-                    topic: zigbee2mqtt/{{repeat.item}}/set
-                    qos: "0"
-                    payload: '{"ledIntensityWhenOff": {{ brightness_off|float * 10 }}}'
+mode: parallel
+sequence:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: 'True'
+      sequence:
+        repeat:
+          for_each:
+          - inovelli_dimmer
+          - inovelli_switch
+          - inovelli_fan_light_combo
+          - inovelli_red_2_in_1
+          - inovelli_blue_2_in_1_zha
+          - inovelli_blue_2_in_1_z2m
+          sequence:
+            choose:
+            - conditions: '{{ inovelli_dimmer|length > 0 and repeat.item == ''inovelli_dimmer''}}'
+              sequence:
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '13'
+                  value: '{{ color }}'
+                target: !input inovelli_dimmer
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '14'
+                  value: '{{ brightness_on }}'
+                target: !input inovelli_dimmer
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '15'
+                  value: '{{ brightness_off }}'
+                target: !input inovelli_dimmer
+            - conditions: '{{ inovelli_switch|length > 0 and repeat.item == ''inovelli_switch''}}'
+              sequence:
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '5'
+                  value: '{{ color }}'
+                target: !input inovelli_switch
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '6'
+                  value: '{{ brightness_on }}'
+                target: !input inovelli_switch
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '7'
+                  value: '{{ brightness_off }}'
+                target: !input inovelli_switch
+            - conditions: '{{ inovelli_fan_light_combo|length > 0 and repeat.item ==''inovelli_fan_light_combo'' }}'
+              sequence:
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '18'
+                  value: '{{ color }}'
+                target: !input inovelli_fan_light_combo
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '20'
+                  value: '{{ color }}'
+                target: !input inovelli_fan_light_combo
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '19'
+                  value: '{{ brightness_on }}'
+                target: !input inovelli_fan_light_combo
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '21'
+                  value: '{{ brightness_on }}'
+                target: !input inovelli_fan_light_combo
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '22'
+                  value: '{{ brightness_off }}'
+                target: !input inovelli_fan_light_combo
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '23'
+                  value: '{{ brightness_off }}'
+                target: !input inovelli_fan_light_combo
+            - conditions: '{{ inovelli_red_2_in_1|length > 0  and repeat.item == ''inovelli_red_2_in_1''}}'
+              sequence:
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '95'
+                  value: '{{ color }}'
+                target: !input inovelli_red_2_in_1
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '96'
+                  value: '{{ color }}'
+                target: !input inovelli_red_2_in_1
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '97'
+                  value: '{{ brightness_on }}'
+                target: !input inovelli_red_2_in_1
+              - service: zwave_js.multicast_set_value
+                data:
+                  command_class: '112'
+                  property: '98'
+                  value: '{{ brightness_off }}'
+                target: !input inovelli_red_2_in_1
+            - conditions: '{{ inovelli_blue_2_in_1_zha|length > 0  and repeat.item == ''inovelli_blue_2_in_1_zha''}}'
+              sequence:
+              - repeat:
+                  for_each: '{{ inovelli_blue_2_in_1_zha.device_id }}'
+                  sequence:
+                  - service: zha.set_zigbee_cluster_attribute
+                    data:
+                      cluster_type: in
+                      endpoint_id: 1
+                      cluster_id: 64561
+                      attribute: 96
+                      manufacturer: '4655'
+                      ieee: '{{ (device_attr(repeat.item, "identifiers")|list).0.1 }}'
+                      value: '{{ color }}'
+                  - service: zha.set_zigbee_cluster_attribute
+                    data:
+                      cluster_type: in
+                      endpoint_id: 1
+                      cluster_id: 64561
+                      attribute: 95
+                      manufacturer: '4655'
+                      ieee: '{{ (device_attr(repeat.item, "identifiers")|list).0.1 }}'
+                      value: '{{ color }}'
+                  - service: zha.set_zigbee_cluster_attribute
+                    data:
+                      cluster_type: in
+                      endpoint_id: 1
+                      cluster_id: 64561
+                      attribute: 97
+                      manufacturer: '4655'
+                      ieee: '{{ (device_attr(repeat.item, "identifiers")|list).0.1 }}'
+                      value: '{{ brightness_on|float * 10 }}'
+                  - service: zha.set_zigbee_cluster_attribute
+                    data:
+                      cluster_type: in
+                      endpoint_id: 1
+                      cluster_id: 64561
+                      attribute: 98
+                      manufacturer: '4655'
+                      ieee: '{{ (device_attr(repeat.item, "identifiers")|list).0.1 }}'
+                      value: '{{ brightness_off|float * 10 }}'
+            - conditions: '{{ inovelli_blue_2_in_1_z2m|length > 0  and repeat.item == ''inovelli_blue_2_in_1_z2m''}}'
+              sequence:
+              - repeat:
+                  for_each: '{{ inovelli_blue_2_in_1_z2m.device_id }}'
+                  sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: zigbee2mqtt/{{repeat.item}}/set
+                      qos: "0"
+                      payload: '{"ledColorWhenOn": {{ color }}}'
+                  - service: mqtt.publish
+                    data:
+                      topic: zigbee2mqtt/{{repeat.item}}/set
+                      qos: "0"
+                      payload: '{"ledColorWhenOff": {{ color }}}'
+                  - service: mqtt.publish
+                    data:
+                      topic: zigbee2mqtt/{{repeat.item}}/set
+                      qos: "0"
+                      payload: '{"ledIntensityWhenOn": {{ brightness_on|float * 10 }}}'
+                  - service: mqtt.publish
+                    data:
+                      topic: zigbee2mqtt/{{repeat.item}}/set
+                      qos: "0"
+                      payload: '{"ledIntensityWhenOff": {{ brightness_off|float * 10 }}}'
