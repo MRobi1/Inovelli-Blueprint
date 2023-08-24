@@ -1,8 +1,8 @@
 blueprint:
   name: Inovelli LED Color Change
-  description: Create automations for Inovelli dimmers and switches to set their LED
-    color. Specific to Z-Wave devices using Z-Wave JS and Zigbee devices using ZHA/Z2M.
+  description: Change the default LED color for Inovelli devices as well as brightness when on/off. Be sure to select DEVICE not entity or areas.
   domain: script
+  source_url: https://raw.githubusercontent.com/MRobi1/Inovelli-Blueprint/main/inovelli_led.yaml
   input:
     inovelli_dimmer:
       name: Inovelli Dimmer
@@ -293,6 +293,6 @@ sequence:
                 payload: '{"ledIntensityWhenOn": {{ brightness_on|float * 10 }}}'
             - service: mqtt.publish
               data:
-                topic: zigbee2mqtt/{{repeat.item}}/set
+                topic: zigbee2mqtt/{{ device_attr(repeat.item, "name" )}}/set
                 qos: "0"
                 payload: '{"ledIntensityWhenOff": {{ brightness_off|float * 10 }}}'
